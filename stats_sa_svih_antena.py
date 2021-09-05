@@ -349,42 +349,42 @@ plt.title('Bland Altman za HR')
 #%%
 
   
-# # field names 
-# fields = range(1,51)
+# field names 
+fields = range(1,51)
     
-# # data rows of csv file 
-# rows = [ BR_Results.psim, 
-#          BR_Results.tsim, 
-#          BR_Results.rtsim, 
-#          BR_Results.cos, 
-#          BR_Results.rxy] 
+# data rows of csv file 
+rows = [ BR_Results.psim, 
+          BR_Results.tsim, 
+          BR_Results.rtsim, 
+          BR_Results.cos, 
+          BR_Results.rxy] 
   
-# with open('br_results.csv', 'w+') as f:
+with open('br_results.csv', 'w+') as f:
       
-#     # using csv.writer method from CSV package
-#     write = csv.writer(f)
+    # using csv.writer method from CSV package
+    write = csv.writer(f)
       
-#     write.writerow(fields)
-#     write.writerows(rows)
-# f.close()    
-# # field names 
-# fields = range(1,51)
+    write.writerow(fields)
+    write.writerows(rows)
+f.close()    
+# field names 
+fields = range(1,51)
     
-# # data rows of csv file 
-# rows = [ HR_Results.psim, 
-#          HR_Results.tsim, 
-#          HR_Results.rtsim, 
-#          HR_Results.cos, 
-#          HR_Results.rxy] 
+# data rows of csv file 
+rows = [ HR_Results.psim, 
+          HR_Results.tsim, 
+          HR_Results.rtsim, 
+          HR_Results.cos, 
+          HR_Results.rxy] 
   
-# with open('hr_results.csv', 'w+') as f:
+with open('hr_results.csv', 'w+') as f:
       
-#     # using csv.writer method from CSV package
-#     write = csv.writer(f)
+    # using csv.writer method from CSV package
+    write = csv.writer(f)
       
-#     write.writerow(fields)
-#     write.writerows(rows)
-# f.close()    
+    write.writerow(fields)
+    write.writerows(rows)
+f.close()    
     
 #%%
 
@@ -408,53 +408,10 @@ for i in range(50):
 BR_set=BRx.reshape((600,20))
 HR_set=HRx.reshape((600,20))
 
-bins=np.array([0,72,156])
-x=HR_set[:,np.newaxis,:]
-y=np.digitize(ages,bins)
+np.savetxt('BR_data.txt',BR_set,delimiter=',')
+np.savetxt('HR_data.txt',HR_set,delimiter=',')
+np.savetxt('age_data.txt',ages,delimiter=',')
 
 
-from sklearn.metrics import accuracy_score
-from sklearn.model_selection import train_test_split
-from sklearn.pipeline import Pipeline
-from sklearn.tree import DecisionTreeClassifier
-from sktime.classification.interval_based import TimeSeriesForestClassifier
-from sktime.datasets import load_arrow_head
-from sktime.utils.slope_and_trend import _slope 
- 
 
-X_train, X_test, y_train, y_test = train_test_split(x, y)
-
-from sktime.transformations.panel.summarize import RandomIntervalFeatureExtractor
-steps = [
-      (
-          "extract",
-          RandomIntervalFeatureExtractor(
-              n_intervals="sqrt", features=[np.mean, np.std, _slope]
-          ),
-      ),
-      ("clf", DecisionTreeClassifier()),
-]
-time_series_tree = Pipeline(steps)
- 
-time_series_tree.fit(X_train, y_train)
-print(time_series_tree.score(X_test, y_test))
- 
-tsf = TimeSeriesForestClassifier( 
-      n_estimators=1000,
-      random_state=1,
-      n_jobs=-1,
-) 
- 
-tsf.fit(X_train, y_train)
-
-y_pred=tsf.predict(X_test)
-
-print(tsf.score(X_test,y_test))
-
-
-from sktime.classification.interval_based import RandomIntervalSpectralForest
-
-rise = RandomIntervalSpectralForest(n_estimators=10)
-rise.fit(X_train, y_train)
-print(rise.score(X_test, y_test))
 

@@ -4,7 +4,7 @@ Created on Wed Sep  1 10:38:11 2021
 
 @author: Marta
 """
-
+# In[1]
 import pandas as pd
 import os
 import numpy as np
@@ -14,7 +14,6 @@ from scipy import signal
 from scipy import ndimage
 from math import floor
 from scipy import stats
-from scipy import io
 import matplotlib.transforms as transforms
 import csv
 
@@ -36,10 +35,6 @@ class Results:
         self.rtsim.append(rtsimnew)
         self.rxy.append(rxynew)
         self.cos.append(cosnew)
-    
-
-        
-        
         
 class Parameters:
     RxNum=4
@@ -87,7 +82,7 @@ def GetFFT(data,para):
     return X
 
 
-def GetDistanceNew(A,para,antena,win):
+def GetDistanceNew(A,para,win):
     d=np.zeros((4,para.Len),dtype=float)
     ind=np.zeros((4,para.Len),dtype=int)
     for j in range(4):
@@ -185,15 +180,13 @@ def corr_plot(x,y,ax,lim1,lim2):
     ax.plot([lim1,lim2],[lim1,lim2],'--',color='black')
     ax.set_xlabel('FMCW Radar')
     ax.set_ylabel('GT')
-    # trans = transforms.blended_transform_factory(
-    # ax.get_yticklabels().get_transform(), ax.transData)
     ax.text(lim1,lim2, "ICC1=%.3f  ICC2=%.3f" % (r1,r2), color="blue", 
         ha="left", va="center")
     ax.text(lim1,lim2-5, "y=%.2fx + %.2f" % (m,b), color="red",
         ha="left", va="center")
     ax.plot([lim1,lim2],[m*lim1+b,m*lim2+b],color='red')
 
-#%% Izbor ispitanika
+# In[2]
 plt.close('all')
 BR_Results=Results()
 HR_Results=Results()
@@ -206,7 +199,7 @@ for participant in range(1,51):
 
 
 
-#%% Ucitavanje raw podataka i GT vrednosti
+
     data=ReadRadarData(os.path.dirname(__file__) + '\Children Dataset\FMCW Radar\Rawdata',participant)
     
     data=np.reshape(data,(para.RxNum,para.Len,para.ADCSamp*para.ChirpsInFrame))
@@ -217,10 +210,8 @@ for participant in range(1,51):
     refBR=refBR.to_numpy(dtype=float)
     
     extremes=ParaExtreme(refHR, refBR)
-    #%% Izdvajanje distance detektovanog predmeta
+
     
-    ant=1 #antena koju posmatramo trenutno
-    frame1=100
     
     X=GetFFT(data,para) #1024 odgovara 3Msps
     
@@ -228,7 +219,7 @@ for participant in range(1,51):
     f=np.arange(0,para.FFTSize)*para.RRFFT/para.FFTSize #udaljenosti u range FFT
     
     
-    d2,ind2=GetDistanceNew(X, para, ant,100) #radi grubu detekciju udaljenosti predmeta
+    d2,ind2=GetDistanceNew(X, para,100) #radi grubu detekciju udaljenosti predmeta
     
     
     hr_all=np.zeros((4,300))
@@ -237,7 +228,7 @@ for participant in range(1,51):
         faza=np.zeros(para.Len)
     
         for i in range(99,para.Len):
-            faza[i]=np.angle(X[ant-1,i,ind2[j,i]])
+            faza[i]=np.angle(X[j,i,ind2[j,i]])
         
         faza=np.unwrap(faza)
         fazadiff=faza[1:]-faza[:-1]
@@ -262,8 +253,7 @@ for participant in range(1,51):
     br_final=np.mean(br_all,axis=0)
     refBR_unif=ndimage.uniform_filter1d(refBR,10)
     
-    
-    #%%
+
     hr_unif=hr_final
     br_unif=br_final
     # Analiza HR
@@ -305,7 +295,7 @@ for participant in range(1,51):
     cos=np.sum(x*y)/(np.sum(x**2)*np.sum(y**2))**0.5
     
     BR_Results.add_stats(x,y,psim,tsim,rtsim,rxy,cos)
-#%%
+# In[3]
 
 BRx=np.vstack(BR_Results.x)
 BRy=np.vstack(BR_Results.y)
@@ -323,30 +313,8 @@ fig2,ax2=plt.subplots()
 bland_altman_plot(HRx, HRy,ax2)
 plt.title('Bland Altman za HR')
 
-# fig3,axs=plt.subplots(3,1,sharex=(True),sharey=True)
-# fig3.suptitle('BR mere slicnosti')
-# axs[0].stem(BR_Results.tsim,label='tsim')
-# axs[1].stem(BR_Results.psim,label='psim')
-# axs[2].stem(BR_Results.rtsim, label='rtsim')
-# axs[2].set_xlabel('redni broj ispitanika')
-# axs[0].set_ylim([0.9,1])
 
-# fig4,axs=plt.subplots(3,1,sharex=(True),sharey=(True))
-# fig4.suptitle('HR mere slicnosti')
-# axs[0].stem(HR_Results.tsim,label='tsim')
-# axs[1].stem(HR_Results.psim,label='psim')
-# axs[2].stem(HR_Results.rtsim, label='rtsim')
-# axs[2].set_xlabel('redni broj ispitanika')
-# axs[0].set_ylim([0.95,1])
-
-# fig5,ax5=plt.subplots()
-# fig5.suptitle('Koeficijenti korelacije')
-# ax5.plot(HR_Results.rxy,color='darkblue',label='HR')
-# ax5.plot(BR_Results.rxy,color='plum',label='BR')
-# ax5.set_xlabel('redni broj ispitanika')
-# ax5.legend()
-
-#%%
+# In[4]
 
   
 # field names 
@@ -386,7 +354,7 @@ with open('hr_results.csv', 'w+') as f:
     write.writerows(rows)
 f.close()    
     
-#%%
+# In[5]
 
 fig6,ax6=plt.subplots()
 corr_plot(BRx,BRy,ax6,10,60)
@@ -396,7 +364,7 @@ fig7,ax7=plt.subplots()
 corr_plot(HRx,HRy,ax7,60,160)
 fig7.suptitle('HR korelacija')
 
-#%%
+# In[6]
 
 age=pd.read_excel(os.path.dirname(__file__) +'\Children Dataset\Participant\Human Data\HumanData.xlsx',usecols=[2])
 age=age.to_numpy(dtype=int)
@@ -404,13 +372,15 @@ ages=np.empty((0,1))
 for i in range(50):
     temp=np.ones((12,1))*age[i]
     ages=np.vstack((ages,temp))
-    
+np.savetxt('age_data600.txt',ages,delimiter=',')
+
+# In[7]   
 BR_set=BRx.reshape((600,20))
 HR_set=HRx.reshape((600,20))
 
 np.savetxt('BR_data.txt',BR_set,delimiter=',')
 np.savetxt('HR_data.txt',HR_set,delimiter=',')
-np.savetxt('age_data.txt',ages,delimiter=',')
+
 
 
 

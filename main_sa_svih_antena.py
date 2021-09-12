@@ -4,6 +4,8 @@ Created on Mon Aug 23 09:57:17 2021
 
 @author: Marta
 """
+# In[1]
+
 
 import pandas as pd
 import os
@@ -92,18 +94,6 @@ def MeasureMovement(X):
     return Movement(Total,Flag)
 
 def GetDistance(A,para,antena):
-    # d=np.empty((para.Len,para.RxNum),dtype=float)
-    
-    # for j in range(0,para.RxNum):
-    #     for i in range(0,para.Len):
-    #         ind=np.argmax(A[j,i,:int(para.FFTSize/2)])
-    #         d[i,j]=ind*para.RRFFT/para.FFTSize
-    
-    # d=np.empty(para.Len,dtype=float)  
-    # for i in range(0,para.Len):
-    #     ind=np.argmax(A[antena-1,i,:int(para.FFTSize/2)])
-    #     d[i]=ind*para.RRFFT/para.FFTSize
-    # return d
 
     d=np.empty(para.Len,dtype=float)  
     for i in range(0,para.Len):
@@ -111,7 +101,7 @@ def GetDistance(A,para,antena):
         d[i]=ind*para.RRFFT/para.FFTSize
     return d
 
-def GetDistanceNew(A,para,antena,win):
+def GetDistanceNew(A,para,win):
     d=np.zeros((4,para.Len),dtype=float)
     ind=np.zeros((4,para.Len),dtype=int)
     for j in range(4):
@@ -134,11 +124,6 @@ def CalcHR(sig, win, step, para, ex):
     plt.xlabel('f [Hz]')
     
     sig_filtered = signal.sosfilt(sos, sig)
-    # plt.figure()
-    # plt.plot(sig_filtered)
-    # plt.xlim([0,1000])
-    
-    # b,a=signal.butter(3, [ex.minhr, ex.maxhr], 'bp', fs=para.FPS)
     w, gd = signal.group_delay((b,a))
     delay=floor(np.amax(gd))
     # plt.figure()
@@ -146,8 +131,7 @@ def CalcHR(sig, win, step, para, ex):
     # plt.plot(w, gd)
     # plt.ylabel('Group delay [samples]')
     # plt.xlabel('Frequency [rad/sample]')
-    # plt.show()
-    
+    # plt.show()  
     hr_res=np.zeros(int(para.Len/step))
     f1=np.arange(0,para.FFTSize)*para.FPS/para.FFTSize
     for i in range(6,int(para.Len/step)):
@@ -165,10 +149,8 @@ def CalcBR(sig, win, step, para, ex):
     plt.legend()
     
     sig_filtered = signal.sosfilt(sos, sig)
-    # b,a=signal.butter(3, [ex.minhr, ex.maxhr], 'bp', fs=para.FPS)
     w, gd = signal.group_delay((b,a))
     delay=floor(np.amax(gd))
-    print(delay)
     # plt.figure()
     # plt.title('Digital filter group delay')
     # plt.plot(w, gd)
@@ -199,8 +181,8 @@ def bland_altman_plot(data1, data2, *args, **kwargs):
     plt.axhline(md,           color='gray', linestyle='--')
     plt.axhline(md + 1.96*sd, color='gray', linestyle='--')
     plt.axhline(md - 1.96*sd, color='gray', linestyle='--')
-#%% Izbor ispitanika
-
+# In[2]
+# Izbor ispitanika
 plt.close('all')
 
 para=Parameters()
@@ -210,8 +192,8 @@ while (participant<1 or participant>50):
     participant = int(input())
 
 
-
-#%% Ucitavanje raw podataka i GT vrednosti
+# In[3]
+# Ucitavanje raw podataka i GT vrednosti
 data=ReadRadarData(os.path.dirname(__file__) + '\Children Dataset\FMCW Radar\Rawdata',participant)
 
 data=np.reshape(data,(para.RxNum,para.Len,para.ADCSamp*para.ChirpsInFrame))
@@ -221,22 +203,10 @@ refBR=ReadGTData(os.path.dirname(__file__) + '\Children Dataset\\Nihon Kohden\He
 refHR=refHR.to_numpy(dtype=float)
 refBR=refBR.to_numpy(dtype=float)
 
-refHRwave=ReadGTWaveData(os.path.dirname(__file__) + '\Children Dataset\\Nihon Kohden\Heartbeat & Breathing Waveform',participant,'Heart')
-refBRwave=ReadGTWaveData(os.path.dirname(__file__) + '\Children Dataset\\Nihon Kohden\Heartbeat & Breathing Waveform',participant,'Breath')
-refHRwave=refHRwave.to_numpy()
-refBRwave=refBRwave.to_numpy()
-
 extremes=ParaExtreme(refHR, refBR)
-#%% Izdvajanje distance detektovanog predmeta
 
-# sos = signal.butter(3, [18,64], 'bp', fs=para.FFTSize, output='sos')
-# filtered = signal.sosfilt(sos, data,axis=2)
-
-# #18 do 64
-# #5 do 20
-# b,a=signal.butter(3, [18,64], 'bp', fs=para.FFTSize)
-# w, gd = signal.group_delay((b,a))
-# delay=floor(np.amax(gd))
+# In[4]
+# Izdvajanje distance detektovanog predmeta
 
 
 ant=1 #antena koju posmatramo trenutno
@@ -263,18 +233,13 @@ plt.title('Anvelopa range-FFT signala u trenutku t='+str(frame1/para.FPS)+' s\n 
 plt.xlabel('Distanca [m]')
 plt.ylabel('Amplituda')
 plt.xlim([0,2.75])
-# ax1.plot(f,np.abs(Xfilt[0,frame1,:]),color='plum',label='izdvojen opseg od interesa')
-# ax1.legend()
+
 
 Y=DetectMovement(X,para) #vraca FFT koji je 99posto razlike ovog i prethodnog trenutka
 Z=MeasureMovement(Y) #razlika ukupne snage u ovom i prethodnom trenutku
 
 
-# d1=np.mean(GetDistance(Xfilt, para, 1),axis=1)
-# d1=GetDistance(Xfilt, para, ant)
-
-
-d2,ind2=GetDistanceNew(X, para, ant,100) #radi grubu detekciju udaljenosti predmeta
+d2,ind2=GetDistanceNew(X, para,100) #radi grubu detekciju udaljenosti predmeta
 hr_all=np.zeros((4,300))
 br_all=np.zeros((4,300))
 
@@ -282,7 +247,7 @@ for j in range(4):
         faza=np.zeros(para.Len)
     
         for i in range(99,para.Len):
-            faza[i]=np.angle(X[ant-1,i,ind2[j,i]])
+            faza[i]=np.angle(X[j-1,i,ind2[j,i]])
         
         faza=np.unwrap(faza)
         fazadiff=faza[1:]-faza[:-1]
@@ -307,13 +272,6 @@ refHR_unif=ndimage.uniform_filter1d(refHR,5)
 br_final=np.mean(br_all,axis=0)
 
 refBR_unif=ndimage.uniform_filter1d(refBR,10)
-# faza=np.zeros(para.Len)
-# for i in range(99,para.Len):
-#     faza[i]=np.angle(X[ant-1,i,ind2[i]])
-    
-# faza=np.unwrap(faza)
-# fazadiff=faza[1:]-faza[:-1]
-# sig2=np.append([0],fazadiff)
 
 
 time6000=np.arange(0,para.Len)/para.FPS
@@ -330,31 +288,12 @@ plt.xlim([60,90])
 fig2.suptitle('Zavisnost faze signala u vremenu\nIspitanik '+str(participant))
 
 
-# spektar_faze=fft(fazadiff[100:300],para.FFTSize)
-
-
-
-# plt.figure()
-# plt.plot(np.abs(spektar_faze))
-# plt.title('Amplitudski spektar evolucije faze')
-# plt.xlim([0,100])
-
-
 # fig2,ax2=plt.subplots()
 # ax2.plot(np.arange(0,para.Len)/para.FPS,d1,color='darkblue')
 # plt.title('Ispitanik '+str(participant)+': Distanca')
 # plt.xlabel('Vreme [s]')
 # plt.ylabel('Distanca [m]')
 # plt.xlim([0,50])
-
-# hr_res=CalcHR(sig2, 100, 20, para, extremes)
-
-# hr_unif=ndimage.uniform_filter1d(hr_res, 16)
-# refHR_unif=ndimage.uniform_filter1d(refHR,5)
-# # hr_res_ma=running_mean(hr_res, 10)
-# # refHR_ma=running_mean(refHR,10)
-
-
 
 
 # fig3,ax3=plt.subplots()
@@ -401,72 +340,3 @@ axs[2].set_ylabel('Movement')
 axs[0].legend(loc='upper left')
 axs[1].legend(loc='upper left')
 fig5.suptitle('Ispitanik broj '+str(participant))
-
-#%%
-
-# Analiza HR
-y=np.transpose(refHR_unif)[20:-40]
-x=np.reshape(hr_unif[20:-40],y.shape)
-# 32 -25 i 26 -31
-plt.figure()
-plt.plot(y)
-plt.plot(x)
-
-
-numsim=np.ones(x.shape,dtype=float)-np.abs(x-y)/(np.abs(x)+np.abs(y))
-tsim=np.mean(numsim)
-
-rtsim=(np.sum(numsim**2)/x.size)**0.5
-
-psim=np.sum(1-np.abs(x-y)/(2*np.maximum(np.abs(x),np.abs(y))))/x.size
-
-# rxy=np.sum((x-np.ones(x.shape)*np.mean(x))*(y-np.ones(y.shape)*np.mean(y)))/(np.sum((x-np.ones(x.shape)*np.mean(x))**2)*np.sum((y-np.ones(y.shape)*np.mean(y))**2))**0.5
-
-rxy,p=stats.pearsonr(x.flatten(),y.flatten())
-
-cos=np.sum(x*y)/(np.sum(x**2)*np.sum(y**2))**0.5
-
-plt.figure()
-plt.scatter(x,y)
-plt.plot([60,160],[60,160])
-plt.title('Korelacija HR')
-plt.xlabel('FMCW')
-plt.ylabel('Clinical sensor')
-
-plt.figure()
-bland_altman_plot(x, y)
-plt.title('Bland-Altman Plot')
-plt.show()
-
-# Analiza BR
-y=np.transpose(refBR_unif)[23:-37]
-x=np.reshape(br_unif[23:-37],y.shape)
-# 35 -25 i 30 -30
-plt.figure()
-plt.plot(y)
-plt.plot(x)
-
-numsim=np.ones(x.shape,dtype=float)-np.abs(x-y)/(np.abs(x)+np.abs(y))
-tsim=np.mean(numsim)
-
-rtsim=(np.sum(numsim**2)/x.size)**0.5
-
-psim=np.sum(1-np.abs(x-y)/(2*np.maximum(np.abs(x),np.abs(y))))/x.size
-
-# rxy=np.sum((x-np.ones(x.shape)*np.mean(x))*(y-np.ones(y.shape)*np.mean(y)))/(np.sum((x-np.ones(x.shape)*np.mean(x))**2)*np.sum((y-np.ones(y.shape)*np.mean(y))**2))**0.5
-
-rxy,p=stats.pearsonr(x.flatten(),y.flatten())
-
-cos=np.sum(x*y)/(np.sum(x**2)*np.sum(y**2))**0.5
-
-plt.figure()
-plt.scatter(x,y)
-plt.plot([18,60],[18,60])
-plt.title('Korelacija BR')
-plt.xlabel('FMCW')
-plt.ylabel('Clinical sensor')
-
-plt.figure()
-bland_altman_plot(x, y)
-plt.title('Bland-Altman Plot')
-plt.show()
